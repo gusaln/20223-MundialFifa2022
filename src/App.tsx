@@ -1,6 +1,13 @@
 import { useState, ReactNode, createContext } from "react";
 import "./App.css";
-import { EquipoId, Partido, partidos, resultadosReales, torneo } from "./fifa";
+import {
+  EquipoId,
+  Partido,
+  partidos,
+  partidosNombres,
+  resultadosReales,
+  torneo,
+} from "./fifa";
 import { TorneoContextProvider, useTorneoContext } from "./useTorneoContext";
 
 interface FaseProps {
@@ -19,7 +26,7 @@ function Fase({ fase, cols = 1, children }: FaseProps) {
 
   return (
     <div className="w-full rounded-md border border-gray-300 px-6 py-4">
-      <div className="pb-4 text-lg italic">{fase}</div>
+      <div className="pb-4 italic">{fase}</div>
 
       <div className={`grid w-full ${styles[cols]} space-x-6`}>{children}</div>
     </div>
@@ -31,18 +38,30 @@ interface PartidoProps {
 }
 
 function Partido({ partido }: PartidoProps): JSX.Element {
-  const { getEquipoResultado } = useTorneoContext();
+  const { hayGanador, getEquipoResultado, getGanador } = useTorneoContext();
 
   return (
-    <div className="flex flex-shrink flex-grow-0 flex-col justify-center justify-items-center space-y-2 p-4 outline outline-1 outline-blue-500">
-      <div className="flex-shrink text-base">
-        {getEquipoResultado(partido.homeId)}
+    <div className="space-y-2 rounded-md p-4 outline-dashed outline-1 outline-blue-500">
+      <div>
+        <small className="block text-sm italic">{partido.partidoId}</small>
+
+        {hayGanador(partido.partidoId) && (
+          <div className="text-lg">
+            Ganador: {getGanador(partido.partidoId)}
+          </div>
+        )}
       </div>
 
-      <div className="flex-shrink font-mono">VS</div>
+      <div className="grid grid-cols-1 grid-rows-3 gap-1">
+        <div className="flex justify-center text-base">
+          {getEquipoResultado(partido.homeId)}
+        </div>
 
-      <div className="flex-shrink text-base">
-        {getEquipoResultado(partido.awayId)}
+        <div className="flex justify-center font-mono">VS</div>
+
+        <div className="flex justify-center text-base">
+          {getEquipoResultado(partido.awayId)}
+        </div>
       </div>
     </div>
   );

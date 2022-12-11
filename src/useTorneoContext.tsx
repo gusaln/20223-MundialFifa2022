@@ -11,13 +11,27 @@ import { EquipoId, resultadosReales } from "./fifa";
 export function useTorneoContext() {
   const { state, dispatcher } = useContext(TorneoContext);
 
+  function hayGanador(partidoId: string) {
+    return !!state.resultados["Ganador " + partidoId];
+  }
+
+  function getGanador(partidoId: string) {
+    return state.resultados["Ganador " + partidoId];
+  }
+
   function getEquipoResultado(equipoId: string) {
     return state.resultados[equipoId] || equipoId;
+  }
+
+  function participantesDe(partidoId: string) {
+    return [];
   }
 
   return {
     state,
 
+    hayGanador,
+    getGanador,
     getEquipoResultado,
   };
 }
