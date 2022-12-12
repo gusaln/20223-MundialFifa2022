@@ -9,7 +9,7 @@ export function Button(props: Props) {
   const { children, ...rest } = props;
 
   return (
-    <button className="block bg-gray-900 p-4 font-mono uppercase text-gray-300" {...rest}>
+    <button className="block bg-gray-900 p-2 font-mono text-sm uppercase text-gray-300 md:p-4 md:text-base" {...rest}>
       {children}
     </button>
   );

@@ -6,39 +6,13 @@ import { Partido } from "./components/Partido";
 import { TorneoContextProvider, useTorneoContext } from "./useTorneoContext";
 import { Equipo } from "./components/Equipo";
 import { orderBy } from "lodash";
-
-interface FaseProps {
-  fase: string;
-  cols?: 1 | 2 | 4 | 8;
-  children: ReactNode;
-}
-
-function Fase({ fase, cols = 1, children }: FaseProps) {
-  const styles = {
-    1: "grid-cols-1",
-    2: "grid-cols-2",
-    4: "grid-cols-4",
-    8: "grid-cols-8",
-  };
-
-  return (
-    <div className="w-full rounded-md border border-gray-300 px-6 py-4">
-      <div className="pb-4 italic">{fase}</div>
-
-      <div className={`grid w-full ${styles[cols]} space-x-6`}>{children}</div>
-    </div>
-  );
-}
+import { Fase } from "./components/Fase";
 
 function Campeon() {
   const { hayResultado, getEquipoDeResultado } = useTorneoContext();
 
-  const mejorJugador = orderBy(mundialJugadores[getEquipoDeResultado("Ganador Partido 64")], "score")?.at(-1);
   const mejorGoleador = orderBy(mundialJugadores[getEquipoDeResultado("Ganador Partido 64")], "shooting")?.at(-1);
-
-  useEffect(() => {
-    console.log(orderBy(mundialJugadores[getEquipoDeResultado("Ganador Partido 64")], "score")?.at(-1));
-  }, [getEquipoDeResultado]);
+  const mejorJugador = orderBy(mundialJugadores[getEquipoDeResultado("Ganador Partido 64")], "score")?.at(-1);
 
   return (
     <div className="w-full space-y-8 rounded-md border border-gray-300 px-6 py-4 shadow-lg">
@@ -67,7 +41,7 @@ function Campeon() {
 function App() {
   return (
     <TorneoContextProvider>
-      <div className="m-auto w-full space-y-8 pt-2 md:w-11/12 md:pt-4 lg:w-10/12 lg:pt-8">
+      <div className="m-auto w-[90%] space-y-8 pt-2 md:w-11/12 md:pt-4 lg:w-10/12 lg:pt-8">
         <Acciones />
 
         <Campeon />
