@@ -2,37 +2,83 @@ import {
   createContext,
   Dispatch,
   Reducer,
+  useCallback,
   useContext,
+  useEffect,
+  useMemo,
   useReducer,
   useRef,
 } from "react";
-import { EquipoId, resultadosReales } from "./fifa";
+import { EquipoId, partidos, resultadosReales } from "./fifa";
+
+const OFFSET = "Ganador ".length;
 
 export function useTorneoContext() {
   const { state, dispatcher } = useContext(TorneoContext);
 
-  function hayGanador(partidoId: string) {
-    return !!state.resultados["Ganador " + partidoId];
-  }
+  const hayGanador = useCallback(
+    (partidoId: string) => !!state.resultados["Ganador " + partidoId],
+    [state]
+  );
 
-  function getGanador(partidoId: string) {
-    return state.resultados["Ganador " + partidoId];
-  }
+  const hayResultado = useCallback(
+    (resultadoId: string) => !!state.resultados[resultadoId],
+    [state]
+  );
 
-  function getEquipoResultado(equipoId: string) {
-    return state.resultados[equipoId] || equipoId;
-  }
+  const getGanador = useCallback(
+    (partidoId: string) => state.resultados["Ganador " + partidoId],
+    [state]
+  );
 
-  function participantesDe(partidoId: string) {
-    return [];
-  }
+  const getResultado = useCallback(
+    (resultadoId: string) => state.resultados[resultadoId] || resultadoId,
+    [state]
+  );
+
+  const getEquipoDeResultado = useCallback(
+    (resultadoId: string) => {
+      while (state.resultados[resultadoId]) {
+        resultadoId = state.resultados[resultadoId];
+      }
+
+      return resultadoId;
+    },
+    [state]
+  );
+
+  const findPartidoByEquipo = useCallback(function (equipoId: string) {
+    let partido = equipoId.includes("Partido")
+      ? equipoId.substring(OFFSET)
+      : equipoId;
+
+    // console.log(equipoId, partido);
+
+    return partidos[partido];
+  }, []);
+
+  const seleccionarResultado = useCallback(
+    (resultadoId: string, equipoId: string) =>
+      dispatcher({ type: "SetResultado", equipoId, resultadoId }),
+    []
+  );
+
+  const resetTodo = useCallback(() => dispatcher({ type: "Reset" }), []);
 
   return {
     state,
 
+    seleccionarResultado,
+    resetTodo,
+
+    findPartidoByEquipo,
+
     hayGanador,
     getGanador,
-    getEquipoResultado,
+
+    hayResultado,
+    getResultado,
+    getEquipoDeResultado,
   };
 }
 
@@ -40,7 +86,9 @@ interface State {
   resultados: Record<string, EquipoId>;
 }
 
-type Action = {};
+type Action =
+  | { type: "Reset" }
+  | { type: "SetResultado"; resultadoId: string; equipoId: string };
 
 const TorneoContext = createContext({
   state: {} as State,
@@ -51,6 +99,28 @@ const reducer: Reducer<State, Action> = function (
   state: State,
   action: Action
 ): State {
+  if (action.type == "Reset") {
+    return {
+      resultados: { ...resultadosReales },
+    };
+  }
+
+  if (action.type == "SetResultado") {
+    const resultados = {
+      ...state.resultados,
+    };
+
+    if (action.resultadoId == action.equipoId) {
+      delete resultados[action.resultadoId];
+    } else {
+      resultados[action.resultadoId] = action.equipoId;
+    }
+
+    console.log({ action, resultados });
+
+    return { resultados };
+  }
+
   return state;
 };
 
@@ -59,13 +129,16 @@ export function TorneoContextProvider(props: any) {
     resultados: { ...resultadosReales },
   });
 
-  const value = useRef({
-    state,
-    dispatcher,
-  });
+  const value = useMemo(
+    () => ({
+      state,
+      dispatcher,
+    }),
+    [state, dispatcher]
+  );
 
   return (
-    <TorneoContext.Provider value={value.current}>
+    <TorneoContext.Provider value={value}>
       {props.children}
     </TorneoContext.Provider>
   );

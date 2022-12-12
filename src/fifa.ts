@@ -21,10 +21,10 @@ export interface Partido {
 
 export const torneo: Fase[] = [
   { nombre: "Final", partidos: ["Partido 64"] },
-  { nombre: "Semifinal", partidos: ["Partido 62", "Partido 61"] },
+  { nombre: "Semifinal", partidos: ["Partido 62", "Partido 61"].sort() },
   {
     nombre: "Cuartos de final",
-    partidos: ["Partido 60", "Partido 59", "Partido 58", "Partido 57"],
+    partidos: ["Partido 60", "Partido 59", "Partido 58", "Partido 57"].sort(),
   },
   {
     nombre: "Octavos de final",
@@ -37,7 +37,7 @@ export const torneo: Fase[] = [
       "Partido 54",
       "Partido 55",
       "Partido 56",
-    ],
+    ].sort(),
   },
 ];
 
@@ -55,7 +55,7 @@ function extraerPartidosYEquipos(raw: string) {
     .split("\n")
     .slice(1)
     .forEach((partidoRaw, i) => {
-      if (partidoRaw.includes("Losers")) {
+      if (partidoRaw.includes("Perdedor")) {
         return;
       }
 
@@ -145,7 +145,7 @@ Ganador Partido 55,Partido 60,Ganador Partido 56,2022
 Ganador Partido 51,Partido 59,Ganador Partido 52,2022
 Ganador Partido 57,Partido 61,Ganador Partido 58,2022
 Ganador Partido 59,Partido 62,Ganador Partido 60,2022
-Losers Partido 61,Partido 63,Losers Partido 62,2022
+Perdedor Partido 61,Partido 63,Perdedor Partido 62,2022
 Ganador Partido 61,Partido 64,Ganador Partido 62,2022`;
 
 const { partidos, participantes } = extraerPartidosYEquipos(PARTIDOS_RAW);
