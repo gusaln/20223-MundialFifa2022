@@ -1,4 +1,5 @@
-import { Partido } from "../fifa";
+import { useEffect } from "react";
+import { Partido } from "../lib/fifa";
 import { useTorneoContext } from "../useTorneoContext";
 import { Equipo } from "./Equipo";
 
@@ -7,12 +8,18 @@ interface PartidoProps {
 }
 
 export function Partido({ partido }: PartidoProps): JSX.Element {
-  const { getGanador } = useTorneoContext();
+  const { hayGanador, getGanador, getEquipoDeResultado } = useTorneoContext();
 
-  const ganador = getGanador(partido.partidoId);
+  const ganador = getEquipoDeResultado(getGanador(partido.partidoId));
+
+  const extra = hayGanador(partido.partidoId) ? "outline" : "outline-dashed";
+
+  // useEffect(() => {
+  //   console.log(partido.partidoId, partido.homeId, partido.awayId, ganador);
+  // }, [ganador]);
 
   return (
-    <div className="space-y-2 rounded-md p-4 outline-dashed outline-1 outline-blue-500">
+    <div className={"space-y-2 rounded-md p-4 outline-2 outline-blue-500 " + extra}>
       <div>
         <small className="block text-sm italic">{partido.partidoId}</small>
         {/* 
@@ -24,19 +31,11 @@ export function Partido({ partido }: PartidoProps): JSX.Element {
       </div>
 
       <div className="space-y-2">
-        <Equipo
-          isGanador={ganador == partido.homeId}
-          resultadoId={partido.homeId}
-        />
+        <Equipo isGanador={ganador == getEquipoDeResultado(partido.homeId)} resultadoId={partido.homeId} />
 
-        <div className="flex justify-center justify-items-center pt-1 font-mono">
-          VS
-        </div>
+        <div className="flex justify-center justify-items-center pt-1 font-mono">VS</div>
 
-        <Equipo
-          isGanador={ganador == partido.awayId}
-          resultadoId={partido.awayId}
-        />
+        <Equipo isGanador={ganador == getEquipoDeResultado(partido.awayId)} resultadoId={partido.awayId} />
       </div>
     </div>
   );

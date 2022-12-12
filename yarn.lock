@@ -719,6 +719,11 @@ scheduler@^0.23.0:
   dependencies:
     loose-envify "^1.1.0"
 
+simple-statistics@^7.8.0:
+  version "7.8.0"
+  resolved "https://registry.yarnpkg.com/simple-statistics/-/simple-statistics-7.8.0.tgz#1033d2d613656c7bd34f0e134fd7e69c803e6836"
+  integrity sha512-lTWbfJc0u6GZhBojLOrlHJMTHu6PdUjSsYLrpiH902dVBiYJyWlN/LdSoG8b5VvfG1D30gIBgarqMNeNmU5nAA==
+
 source-map-js@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/source-map-js/-/source-map-js-1.0.2.tgz#adbc361d9c62df380125e7f161f71c826f1e490c"

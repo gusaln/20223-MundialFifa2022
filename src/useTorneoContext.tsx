@@ -9,48 +9,37 @@ import {
   useReducer,
   useRef,
 } from "react";
-import { EquipoId, partidos, resultadosReales } from "./fifa";
+import {
+  cuartosResultados,
+  EquipoId,
+  getEquipoDeResultado as libGetEquipoDeResultado,
+  octavosResultados,
+  partidos,
+  resultadosReales,
+  torneo,
+} from "./lib/fifa";
+import { ganador, predictPoints } from "./lib/predic";
 
 const OFFSET = "Ganador ".length;
 
 export function useTorneoContext() {
   const { state, dispatcher } = useContext(TorneoContext);
 
-  const hayGanador = useCallback(
-    (partidoId: string) => !!state.resultados["Ganador " + partidoId],
-    [state]
-  );
+  const hayGanador = useCallback((partidoId: string) => !!state.resultados["Ganador " + partidoId], [state]);
 
-  const hayResultado = useCallback(
-    (resultadoId: string) => !!state.resultados[resultadoId],
-    [state]
-  );
+  const hayResultado = useCallback((resultadoId: string) => !!state.resultados[resultadoId], [state]);
 
-  const getGanador = useCallback(
-    (partidoId: string) => state.resultados["Ganador " + partidoId],
-    [state]
-  );
+  const getGanador = useCallback((partidoId: string) => state.resultados["Ganador " + partidoId], [state]);
 
-  const getResultado = useCallback(
-    (resultadoId: string) => state.resultados[resultadoId] || resultadoId,
-    [state]
-  );
+  const getResultado = useCallback((resultadoId: string) => state.resultados[resultadoId] || resultadoId, [state]);
 
   const getEquipoDeResultado = useCallback(
-    (resultadoId: string) => {
-      while (state.resultados[resultadoId]) {
-        resultadoId = state.resultados[resultadoId];
-      }
-
-      return resultadoId;
-    },
+    (resultadoId: string) => libGetEquipoDeResultado(state.resultados, resultadoId),
     [state]
   );
 
   const findPartidoByEquipo = useCallback(function (equipoId: string) {
-    let partido = equipoId.includes("Partido")
-      ? equipoId.substring(OFFSET)
-      : equipoId;
+    let partido = equipoId.includes("Partido") ? equipoId.substring(OFFSET) : equipoId;
 
     // console.log(equipoId, partido);
 
@@ -58,18 +47,23 @@ export function useTorneoContext() {
   }, []);
 
   const seleccionarResultado = useCallback(
-    (resultadoId: string, equipoId: string) =>
-      dispatcher({ type: "SetResultado", equipoId, resultadoId }),
+    (resultadoId: string, equipoId: string) => dispatcher({ type: "SetResultado", equipoId, resultadoId }),
     []
   );
 
-  const resetTodo = useCallback(() => dispatcher({ type: "Reset" }), []);
+  const resetOctavos = useCallback(() => dispatcher({ type: "ResetOctavos" }), []);
+  const resetCuartos = useCallback(() => dispatcher({ type: "ResetCuartos" }), []);
+  const resetSemi = useCallback(() => dispatcher({ type: "ResetSemi" }), []);
+  const predecirTorneo = useCallback(() => dispatcher({ type: "Predecir" }), []);
 
   return {
     state,
 
     seleccionarResultado,
-    resetTodo,
+    predecirTorneo,
+    resetOctavos,
+    resetCuartos,
+    resetSemi,
 
     findPartidoByEquipo,
 
@@ -87,21 +81,31 @@ interface State {
 }
 
 type Action =
-  | { type: "Reset" }
-  | { type: "SetResultado"; resultadoId: string; equipoId: string };
+  | { type: "ResetOctavos" }
+  | { type: "ResetCuartos" }
+  | { type: "ResetSemi" }
+  | { type: "SetResultado"; resultadoId: string; equipoId: string }
+  | { type: "Predecir" };
 
 const TorneoContext = createContext({
   state: {} as State,
   dispatcher: (() => ({})) as Dispatch<Action>,
 });
 
-const reducer: Reducer<State, Action> = function (
-  state: State,
-  action: Action
-): State {
-  if (action.type == "Reset") {
+const reducer: Reducer<State, Action> = function (state: State, action: Action): State {
+  if (action.type == "ResetOctavos") {
     return {
       resultados: { ...resultadosReales },
+    };
+  }
+  if (action.type == "ResetCuartos") {
+    return {
+      resultados: { ...resultadosReales, ...octavosResultados },
+    };
+  }
+  if (action.type == "ResetSemi") {
+    return {
+      resultados: { ...resultadosReales, ...octavosResultados, ...cuartosResultados },
     };
   }
 
@@ -116,7 +120,28 @@ const reducer: Reducer<State, Action> = function (
       resultados[action.resultadoId] = action.equipoId;
     }
 
-    console.log({ action, resultados });
+    // console.log({ action, resultados });
+
+    return { resultados };
+  }
+
+  if (action.type == "Predecir") {
+    const resultados = {
+      ...state.resultados,
+    };
+
+    let t = torneo.slice().reverse();
+
+    for (const fase of t) {
+      for (const partidoId of fase.partidos) {
+        if (!resultados["Ganador " + partidoId]) {
+          let p = partidos[partidoId];
+          let g = ganador(libGetEquipoDeResultado(resultados, p.homeId), libGetEquipoDeResultado(resultados, p.awayId));
+          console.log("Prediciendo " + partidoId, g);
+          resultados["Ganador " + partidoId] = g;
+        }
+      }
+    }
 
     return { resultados };
   }
@@ -137,9 +162,5 @@ export function TorneoContextProvider(props: any) {
     [state, dispatcher]
   );
 
-  return (
-    <TorneoContext.Provider value={value}>
-      {props.children}
-    </TorneoContext.Provider>
-  );
+  return <TorneoContext.Provider value={value}>{props.children}</TorneoContext.Provider>;
 }

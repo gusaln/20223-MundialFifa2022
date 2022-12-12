@@ -2,30 +2,27 @@ import { useMemo, useState } from "react";
 import { useTorneoContext } from "../useTorneoContext";
 
 interface Props {
-  isGanador: boolean;
+  isCampeon?: boolean;
+  isGanador?: boolean;
   resultadoId: string;
 }
 
 export function Equipo(props: Props) {
-  const {
-    getResultado,
-    hayResultado,
-    getEquipoDeResultado,
-    findPartidoByEquipo,
-    seleccionarResultado,
-  } = useTorneoContext();
+  const { getResultado, hayResultado, getEquipoDeResultado, findPartidoByEquipo, seleccionarResultado } =
+    useTorneoContext();
 
   const className = "flex justify-center rounded text-base ";
 
   const partido = findPartidoByEquipo(props.resultadoId);
-  const extra = props.isGanador ? "bg-green-400 font-semibold py-2" : "";
+  let extra = props.isCampeon || props.isGanador ? "font-semibold py-2 " : "";
+  if (props.isCampeon && props.isGanador) {
+    extra = extra + "bg-yellow-400 font-lg ";
+  } else if (props.isGanador) {
+    extra = extra + "bg-green-400 ";
+  }
 
   if (!partido) {
-    return (
-      <div className={className + extra}>
-        {getEquipoDeResultado(props.resultadoId)}
-      </div>
-    );
+    return <div className={className + extra}>{getEquipoDeResultado(props.resultadoId)}</div>;
   }
 
   return (
@@ -34,19 +31,9 @@ export function Equipo(props: Props) {
         className="rounded-sm bg-transparent p-1 transition-colors duration-100 ease-in hover:bg-gray-200"
         value={getResultado(props.resultadoId)}
         onChange={(ev) =>
-          seleccionarResultado(props.resultadoId, ev.target.value)
+          seleccionarResultado(props.resultadoId, ev.target.value != "" ? ev.target.value : props.resultadoId)
         }
       >
-        {/* {hayResultado(props.resultadoId) ? (
-          <option hidden value={getResultado(props.resultadoId)}>
-            {getEquipoDeResultado(props.resultadoId)}
-          </option>
-        ) :
-        <option hidden value={getResultado(props.resultadoId)}>
-        {getEquipoDeResultado(props.resultadoId)}
-      </option>
-        } */}
-
         <option hidden value={getResultado(props.resultadoId)}>
           {getEquipoDeResultado(props.resultadoId)}
         </option>
@@ -55,13 +42,9 @@ export function Equipo(props: Props) {
           Deseleccionar
         </option>
 
-        <option value={partido.homeId}>
-          {getEquipoDeResultado(partido.homeId)}
-        </option>
+        <option value={partido.homeId}>{getEquipoDeResultado(partido.homeId)}</option>
 
-        <option value={partido.awayId}>
-          {getEquipoDeResultado(partido.awayId)}
-        </option>
+        <option value={partido.awayId}>{getEquipoDeResultado(partido.awayId)}</option>
       </select>
     </div>
   );
