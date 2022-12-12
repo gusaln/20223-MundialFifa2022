@@ -1,14 +1,4 @@
-import {
-  createContext,
-  Dispatch,
-  Reducer,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-} from "react";
+import { createContext, Dispatch, Reducer, useCallback, useContext, useMemo, useReducer } from "react";
 import {
   cuartosResultados,
   EquipoId,
@@ -18,7 +8,7 @@ import {
   resultadosReales,
   torneo,
 } from "./lib/fifa";
-import { ganador, predictPoints } from "./lib/predic";
+import { ganador } from "./lib/predic";
 
 const OFFSET = "Ganador ".length;
 
@@ -26,13 +16,9 @@ export function useTorneoContext() {
   const { state, dispatcher } = useContext(TorneoContext);
 
   const hayGanador = useCallback((partidoId: string) => !!state.resultados["Ganador " + partidoId], [state]);
-
   const hayResultado = useCallback((resultadoId: string) => !!state.resultados[resultadoId], [state]);
-
   const getGanador = useCallback((partidoId: string) => state.resultados["Ganador " + partidoId], [state]);
-
   const getResultado = useCallback((resultadoId: string) => state.resultados[resultadoId] || resultadoId, [state]);
-
   const getEquipoDeResultado = useCallback(
     (resultadoId: string) => libGetEquipoDeResultado(state.resultados, resultadoId),
     [state]
@@ -78,6 +64,7 @@ export function useTorneoContext() {
 
 interface State {
   resultados: Record<string, EquipoId>;
+  predicciones: Record<string, boolean>;
 }
 
 type Action =
@@ -96,23 +83,25 @@ const reducer: Reducer<State, Action> = function (state: State, action: Action):
   if (action.type == "ResetOctavos") {
     return {
       resultados: { ...resultadosReales },
+      predicciones: {},
     };
   }
   if (action.type == "ResetCuartos") {
     return {
       resultados: { ...resultadosReales, ...octavosResultados },
+      predicciones: {},
     };
   }
   if (action.type == "ResetSemi") {
     return {
       resultados: { ...resultadosReales, ...octavosResultados, ...cuartosResultados },
+      predicciones: {},
     };
   }
 
   if (action.type == "SetResultado") {
-    const resultados = {
-      ...state.resultados,
-    };
+    const resultados = { ...state.resultados };
+    const predicciones = { ...state.predicciones };
 
     if (action.resultadoId == action.equipoId) {
       delete resultados[action.resultadoId];
@@ -120,15 +109,14 @@ const reducer: Reducer<State, Action> = function (state: State, action: Action):
       resultados[action.resultadoId] = action.equipoId;
     }
 
-    // console.log({ action, resultados });
+    delete predicciones[action.resultadoId.substring(OFFSET)];
 
-    return { resultados };
+    return { resultados, predicciones };
   }
 
   if (action.type == "Predecir") {
-    const resultados = {
-      ...state.resultados,
-    };
+    const resultados = { ...state.resultados };
+    const predicciones = { ...state.predicciones };
 
     let t = torneo.slice().reverse();
 
@@ -137,13 +125,16 @@ const reducer: Reducer<State, Action> = function (state: State, action: Action):
         if (!resultados["Ganador " + partidoId]) {
           let p = partidos[partidoId];
           let g = ganador(libGetEquipoDeResultado(resultados, p.homeId), libGetEquipoDeResultado(resultados, p.awayId));
-          console.log("Prediciendo " + partidoId, g);
+          // console.log("Prediciendo " + partidoId, g);
+
+          predicciones[p.partidoId] = true;
+
           resultados["Ganador " + partidoId] = g;
         }
       }
     }
 
-    return { resultados };
+    return { resultados, predicciones };
   }
 
   return state;
@@ -152,6 +143,7 @@ const reducer: Reducer<State, Action> = function (state: State, action: Action):
 export function TorneoContextProvider(props: any) {
   const [state, dispatcher] = useReducer<typeof reducer>(reducer, {
     resultados: { ...resultadosReales },
+    predicciones: {},
   });
 
   const value = useMemo(

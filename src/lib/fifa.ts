@@ -87,7 +87,7 @@ export const octavosResultados: Record<string, EquipoId> = {
   "Ganador Partido 53": "Croatia",
   "Ganador Partido 54": "Brazil",
 
-  "Ganador Partido 55": "Moroco",
+  "Ganador Partido 55": "Morocco",
   "Ganador Partido 56": "Portugal",
 } as const;
 
@@ -97,7 +97,7 @@ export const cuartosResultados: Record<string, EquipoId> = {
   "Ganador Partido 59": "France",
 
   "Ganador Partido 58": "Croatia",
-  "Ganador Partido 60": "Moroco",
+  "Ganador Partido 60": "Morocco",
 } as const;
 
 export const partidos: Record<PartidoId, Partido> = partidosData;

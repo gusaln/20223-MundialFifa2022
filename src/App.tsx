@@ -1,19 +1,19 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import "./App.css";
 import { Acciones } from "./components/Acciones";
-import { partidos, torneo } from "./lib/fifa";
+import { mundialJugadores, partidos, torneo } from "./lib/fifa";
 import { Partido } from "./components/Partido";
 import { TorneoContextProvider, useTorneoContext } from "./useTorneoContext";
 import { Equipo } from "./components/Equipo";
+import { orderBy } from "lodash";
 
 interface FaseProps {
   fase: string;
-  importante?: boolean;
   cols?: 1 | 2 | 4 | 8;
   children: ReactNode;
 }
 
-function Fase({ importante = false, fase, cols = 1, children }: FaseProps) {
+function Fase({ fase, cols = 1, children }: FaseProps) {
   const styles = {
     1: "grid-cols-1",
     2: "grid-cols-2",
@@ -31,15 +31,35 @@ function Fase({ importante = false, fase, cols = 1, children }: FaseProps) {
 }
 
 function Campeon() {
-  const { hayResultado } = useTorneoContext();
+  const { hayResultado, getEquipoDeResultado } = useTorneoContext();
+
+  const mejorJugador = orderBy(mundialJugadores[getEquipoDeResultado("Ganador Partido 64")], "score")?.at(-1);
+  const mejorGoleador = orderBy(mundialJugadores[getEquipoDeResultado("Ganador Partido 64")], "shooting")?.at(-1);
+
+  useEffect(() => {
+    console.log(orderBy(mundialJugadores[getEquipoDeResultado("Ganador Partido 64")], "score")?.at(-1));
+  }, [getEquipoDeResultado]);
 
   return (
-    <div className="w-full rounded-md border border-gray-300 px-6 py-4 shadow-lg">
-      <div className="pb-4 text-xl font-semibold">Campeón</div>
-
-      <div className="grid w-full  space-x-6">
+    <div className="w-full space-y-8 rounded-md border border-gray-300 px-6 py-4 shadow-lg">
+      <div className="w-full space-y-4">
+        <div className="text-xl font-semibold">Campeón</div>
         <Equipo isCampeon isGanador={hayResultado("Ganador Partido 64")} resultadoId="Ganador Partido 64" />
       </div>
+
+      {hayResultado("Ganador Partido 64") && (
+        <>
+          <div className="w-full space-y-4">
+            <div className="text-xl font-semibold">Goleador</div>
+            <div>{mejorGoleador?.nombre || ""}</div>
+          </div>
+
+          <div className="w-full space-y-4">
+            <div className="text-xl font-semibold">Mejor jugador</div>
+            <div>{mejorJugador?.nombre || ""}</div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

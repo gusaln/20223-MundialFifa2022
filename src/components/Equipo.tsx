@@ -1,4 +1,6 @@
+import { groupBy, keyBy } from "lodash";
 import { useMemo, useState } from "react";
+import flags from "../data/flags";
 import { useTorneoContext } from "../useTorneoContext";
 
 interface Props {
@@ -7,11 +9,13 @@ interface Props {
   resultadoId: string;
 }
 
+const banderasPorEquipo = keyBy(flags, "equipo");
+
 export function Equipo(props: Props) {
   const { getResultado, hayResultado, getEquipoDeResultado, findPartidoByEquipo, seleccionarResultado } =
     useTorneoContext();
 
-  const className = "flex justify-center rounded text-base ";
+  const className = "flex justify-center rounded text-base space-x-2 ";
 
   const partido = findPartidoByEquipo(props.resultadoId);
   let extra = props.isCampeon || props.isGanador ? "font-semibold py-2 " : "";
@@ -22,11 +26,25 @@ export function Equipo(props: Props) {
   }
 
   if (!partido) {
-    return <div className={className + extra}>{getEquipoDeResultado(props.resultadoId)}</div>;
+    return (
+      <div className={className + extra}>
+        <figure className="mr-2">
+          <img src={banderasPorEquipo[getEquipoDeResultado(props.resultadoId)]?.banderaUrl} alt="bandera" />
+        </figure>
+
+        {getEquipoDeResultado(props.resultadoId)}
+      </div>
+    );
   }
 
   return (
     <div className={className + extra}>
+      {hayResultado(props.resultadoId) && (
+        <figure>
+          <img src={banderasPorEquipo[getEquipoDeResultado(props.resultadoId)]?.banderaUrl} alt="bandera" />
+        </figure>
+      )}
+
       <select
         className="rounded-sm bg-transparent p-1 transition-colors duration-100 ease-in hover:bg-gray-200"
         value={getResultado(props.resultadoId)}

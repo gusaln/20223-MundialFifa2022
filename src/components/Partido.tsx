@@ -8,11 +8,14 @@ interface PartidoProps {
 }
 
 export function Partido({ partido }: PartidoProps): JSX.Element {
-  const { hayGanador, getGanador, getEquipoDeResultado } = useTorneoContext();
+  const { state, hayGanador, getGanador, getEquipoDeResultado } = useTorneoContext();
 
   const ganador = getEquipoDeResultado(getGanador(partido.partidoId));
 
-  const extra = hayGanador(partido.partidoId) ? "outline" : "outline-dashed";
+  let extra = hayGanador(partido.partidoId) ? "outline " : "outline-dashed ";
+  if (state.predicciones[partido.partidoId]) {
+    extra = extra + "bg-blue-600 ";
+  }
 
   // useEffect(() => {
   //   console.log(partido.partidoId, partido.homeId, partido.awayId, ganador);
